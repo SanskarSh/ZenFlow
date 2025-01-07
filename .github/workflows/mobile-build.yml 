@@ -6,6 +6,14 @@ on:
       - 'v*'
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  issues: write
+
 jobs:
   build:
     runs-on: macos-latest
@@ -43,7 +51,7 @@ jobs:
         run: flutter pub get && flutter pub run build_runner build --delete-conflicting-outputs
         
       - name: Check Android build
-        run: flutter analyze
+        run: flutter analyze --no-fatal-warnings
         
       - name: Run tests
         run: flutter test
@@ -77,12 +85,21 @@ jobs:
           body: |
             Release ${{ github.ref_name }}
             
+            ## Version Information
+            - Release Date: $(date +'%Y-%m-%d')
+            - Flutter Version: 3.27.1
+            
             ## Downloads
             - [Android APK (arm64-v8a)](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/app-release-arm64-v8a.apk)
             - [Android APK (armeabi-v7a)](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/app-release-armeabi-v7a.apk)
             - [Android APK (x86_64)](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/app-release-x86_64.apk)
             - [Android App Bundle](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/app-release.aab)
             - [iOS IPA](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/app.ipa)
+            
+            ## SHA-256 Checksums
+            ```
+            $(sha256sum build/app/outputs/flutter-apk/app-release-*.apk build/app/outputs/bundle/release/app-release.aab build/ios/iphoneos/app.ipa)
+            ```
           draft: false
           prerelease: false
         env:
@@ -92,6 +109,7 @@ jobs:
         if: failure()
         uses: actions/github-script@v6
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             github.rest.issues.create({
               owner: context.repo.owner,

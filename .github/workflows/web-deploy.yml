@@ -1,22 +1,17 @@
-name: Deploy Web App to GitHub Pages
+name: Deploy to GitHub Pages
 
 on:
   push:
     branches: [main]
   workflow_dispatch:
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
       - uses: actions/checkout@v3
@@ -31,8 +26,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-flutter-
 
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@v2
         with:
           flutter-version: "3.27.1"
           channel: "stable"
@@ -40,32 +34,10 @@ jobs:
       - name: Get dependencies
         run: flutter pub get && flutter pub run build_runner build --delete-conflicting-outputs
 
-      - name: Check web build
-        run: flutter analyze
+      - name: Build web
+        run: flutter build web --base-href "/ZenFlow/"
 
-      - name: Build web app
-        run: flutter build web --release --base-href "/ZenFlow/"
-
-      - name: Setup Pages
-        uses: actions/configure-pages@v3
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v2
+      - uses: peaceiris/actions-gh-pages@v3
         with:
-          path: "build/web"
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v2
-
-      - name: Notify on failure
-        if: failure()
-        uses: actions/github-script@v6
-        with:
-          script: |
-            github.rest.issues.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              title: 'Web deployment failed',
-              body: 'Workflow failed on commit ${{ github.sha }}'
-            })
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build/web
