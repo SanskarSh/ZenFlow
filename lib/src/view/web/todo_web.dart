@@ -17,7 +17,7 @@ class TodoWeb extends GetView<TaskController> {
     final RxInt selectedIndex = 0.obs;
 
     return Scaffold(
-      backgroundColor: theme.colorScheme.background,
+      backgroundColor: theme.colorScheme.surface,
       body: Row(
         children: [
           // Sidebar
@@ -128,13 +128,13 @@ class TodoWeb extends GetView<TaskController> {
                 Icon(
                   Icons.task_alt,
                   size: 64,
-                  color: theme.colorScheme.primary.withOpacity(0.5),
+                  color: theme.colorScheme.primary.withValues(alpha: 0.5),
                 ),
                 const SizedBox(height: 16),
                 Text(
                   'No tasks yet',
                   style: theme.textTheme.bodyLarge?.copyWith(
-                    color: theme.colorScheme.onBackground.withOpacity(0.6),
+                    color: theme.colorScheme.onSurface.withValues(alpha: .6),
                   ),
                 ),
               ],

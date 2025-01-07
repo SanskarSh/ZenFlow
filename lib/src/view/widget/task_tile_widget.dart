@@ -19,11 +19,11 @@ class ListWidget extends GetView<TaskController> {
 
     return Obx(() => Card(
           // color: task.task.priority == Priority.high
-          //     ? theme.colorScheme.secondary.withOpacity(0.7)
+          //     ? theme.colorScheme.secondary.withValues(alpha:0.7)
           //     : task.task.priority == Priority.medium
-          //         ? theme.colorScheme.tertiary.withOpacity(0.7)
+          //         ? theme.colorScheme.tertiary.withValues(alpha:0.7)
           //         : task.task.priority == Priority.low
-          //             ? theme.colorScheme.primary.withOpacity(0.7)
+          //             ? theme.colorScheme.primary.withValues(alpha:0.7)
           //             : theme.colorScheme.surface,
           elevation: 3,
           margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
@@ -68,7 +68,7 @@ class ListWidget extends GetView<TaskController> {
                                             : null,
                                         color: task.task.isCompleted
                                             ? theme.colorScheme.onSurface
-                                                .withOpacity(0.6)
+                                                .withValues(alpha: 0.6)
                                             : theme.colorScheme.onSurface,
                                       ),
                                     ),
@@ -97,7 +97,7 @@ class ListWidget extends GetView<TaskController> {
                                   task.task.description!,
                                   style: theme.textTheme.bodyMedium?.copyWith(
                                     color: theme.colorScheme.onSurface
-                                        .withOpacity(0.7),
+                                        .withValues(alpha: 0.7),
                                   ),
                                 ),
                               ],
@@ -122,7 +122,7 @@ class ListWidget extends GetView<TaskController> {
                               dateFormat.format(task.task.createdAt),
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: theme.colorScheme.onSurface
-                                    .withOpacity(0.6),
+                                    .withValues(alpha: 0.6),
                               ),
                             ),
                           ],
@@ -161,7 +161,8 @@ class ListWidget extends GetView<TaskController> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.secondary.withOpacity(0.1),
+                          color: theme.colorScheme.secondary
+                              .withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Row(
@@ -210,7 +211,7 @@ class ListWidget extends GetView<TaskController> {
                 child: Text(
                   'No subtasks yet',
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurface.withOpacity(0.6),
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                   ),
                 ),
               ),

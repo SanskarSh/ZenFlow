@@ -9,6 +9,7 @@ on:
 jobs:
   build:
     runs-on: macos-latest
+    timeout-minutes: 45
     
     steps:
       - uses: actions/checkout@v3
@@ -48,7 +49,7 @@ jobs:
         run: flutter test
         
       - name: Build Android APK
-        run: flutter build apk --release
+        run: flutter build apk --release --split-per-abi
 
       - name: Build Android App Bundle
         run: flutter build appbundle --release
@@ -69,7 +70,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            build/app/outputs/flutter-apk/app-release.apk
+            build/app/outputs/flutter-apk/app-release-*.apk
             build/app/outputs/bundle/release/app-release.aab
             build/ios/iphoneos/app.ipa
           name: Release ${{ github.ref_name }}
@@ -77,10 +78,24 @@ jobs:
             Release ${{ github.ref_name }}
             
             ## Downloads
-            - [Android APK](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/app-release.apk)
+            - [Android APK (arm64-v8a)](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/app-release-arm64-v8a.apk)
+            - [Android APK (armeabi-v7a)](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/app-release-armeabi-v7a.apk)
+            - [Android APK (x86_64)](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/app-release-x86_64.apk)
             - [Android App Bundle](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/app-release.aab)
             - [iOS IPA](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/app.ipa)
           draft: false
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Notify on failure
+        if: failure()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: 'Mobile build failed',
+              body: 'Mobile build workflow failed on commit ${{ github.sha }}'
+            })

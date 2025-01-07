@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get/route_manager.dart';
 import 'package:todo/src/data/db/dao/dao.dart';
 import 'package:todo/src/core/theme/theme.dart';
 import 'package:todo/src/core/binding/app_binding.dart';

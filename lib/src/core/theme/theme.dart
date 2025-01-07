@@ -20,8 +20,6 @@ class MyTheme {
         brightness: isDark ? Brightness.dark : Brightness.light,
         surface: colors.surfaceColor,
         onSurface: colors.onSurfaceColor,
-        background: colors.backgroundColor,
-        onBackground: colors.onBackgroundColor,
         primary: colors.primaryColor,
         onPrimary: colors.onPrimaryColor,
         secondary: colors.secondaryColor,

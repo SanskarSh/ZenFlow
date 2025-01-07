@@ -27,10 +27,10 @@ class TaskFormContent extends StatefulWidget {
   const TaskFormContent(
       {super.key, required this.isRoutine, required this.bgColor});
   @override
-  _TaskFormContentState createState() => _TaskFormContentState();
+  TaskFormContentState createState() => TaskFormContentState();
 }
 
-class _TaskFormContentState extends State<TaskFormContent> {
+class TaskFormContentState extends State<TaskFormContent> {
   final TaskController controller = Get.find<TaskController>();
   final PageController _pageController = PageController();
   final _formKey = GlobalKey<FormState>();
@@ -103,7 +103,8 @@ class _TaskFormContentState extends State<TaskFormContent> {
                         color: theme.colorScheme.surface,
                         border: Border(
                           top: BorderSide(
-                            color: theme.colorScheme.outline.withOpacity(0.1),
+                            color:
+                                theme.colorScheme.outline.withValues(alpha: .1),
                           ),
                         ),
                       ),
@@ -113,7 +114,7 @@ class _TaskFormContentState extends State<TaskFormContent> {
                           Obx(() => LinearProgressIndicator(
                                 value: (_currentPage.value + 1) / _totalPages,
                                 backgroundColor:
-                                    theme.colorScheme.surfaceVariant,
+                                    theme.colorScheme.surfaceContainerHighest,
                                 valueColor: AlwaysStoppedAnimation<Color>(
                                   theme.colorScheme.primary,
                                 ),
@@ -154,7 +155,7 @@ class _TaskFormContentState extends State<TaskFormContent> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
             side: BorderSide(
-              color: theme.colorScheme.outline.withOpacity(0.2),
+              color: theme.colorScheme.outline.withValues(alpha: .2),
             ),
           ),
           color: theme.colorScheme.surface,
@@ -215,7 +216,7 @@ class _TaskFormContentState extends State<TaskFormContent> {
                                           ? [
                                               BoxShadow(
                                                 color: _getPriorityColor(value)
-                                                    .withOpacity(0.4),
+                                                    .withValues(alpha: .4),
                                                 blurRadius: 8,
                                                 spreadRadius: 2,
                                               )
@@ -243,7 +244,7 @@ class _TaskFormContentState extends State<TaskFormContent> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
             side: BorderSide(
-              color: theme.colorScheme.outline.withOpacity(0.2),
+              color: theme.colorScheme.outline.withValues(alpha: .2),
             ),
           ),
           color: theme.colorScheme.surface,
@@ -383,7 +384,7 @@ class _TaskFormContentState extends State<TaskFormContent> {
                 borderRadius: BorderRadius.circular(12),
                 color: isCarryForward.value
                     ? Theme.of(context).colorScheme.primaryContainer
-                    : Theme.of(context).colorScheme.surfaceVariant,
+                    : Theme.of(context).colorScheme.surfaceContainerHighest,
               ),
               child: Row(
                 children: [
@@ -413,11 +414,11 @@ class _TaskFormContentState extends State<TaskFormContent> {
                                 ? Theme.of(context)
                                     .colorScheme
                                     .onPrimaryContainer
-                                    .withOpacity(0.8)
+                                    .withValues(alpha: .8)
                                 : Theme.of(context)
                                     .colorScheme
                                     .onSurfaceVariant
-                                    .withOpacity(0.8),
+                                    .withValues(alpha: .8),
                           ),
                         ),
                       ],
@@ -431,7 +432,9 @@ class _TaskFormContentState extends State<TaskFormContent> {
                       shape: BoxShape.circle,
                       color: isCarryForward.value
                           ? Theme.of(context).colorScheme.primary
-                          : Theme.of(context).colorScheme.surfaceVariant,
+                          : Theme.of(context)
+                              .colorScheme
+                              .surfaceContainerHighest,
                       border: Border.all(
                         color: isCarryForward.value
                             ? Theme.of(context).colorScheme.primary
@@ -469,7 +472,7 @@ class _TaskFormContentState extends State<TaskFormContent> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                   side: BorderSide(
-                    color: theme.colorScheme.outline.withOpacity(0.2),
+                    color: theme.colorScheme.outline.withValues(alpha: 0.2),
                   ),
                 ),
                 color: theme.colorScheme.surface,
@@ -556,7 +559,7 @@ class _TaskFormContentState extends State<TaskFormContent> {
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: theme.shadowColor.withOpacity(0.1),
+                        color: theme.shadowColor.withValues(alpha: 0.1),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),
@@ -586,7 +589,10 @@ class _TaskFormContentState extends State<TaskFormContent> {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Theme.of(context).colorScheme.shadow.withOpacity(0.05),
+                color: Theme.of(context)
+                    .colorScheme
+                    .shadow
+                    .withValues(alpha: 0.05),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
@@ -597,7 +603,7 @@ class _TaskFormContentState extends State<TaskFormContent> {
             decoration: InputDecoration(
               hintText: 'What would you like to do?',
               hintStyle: theme.textTheme.bodyLarge?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.5),
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
               ),
               filled: true,
               fillColor: theme.colorScheme.surface,
@@ -610,7 +616,7 @@ class _TaskFormContentState extends State<TaskFormContent> {
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide(
-                  color: theme.colorScheme.outline.withOpacity(0.5),
+                  color: theme.colorScheme.outline.withValues(alpha: 0.5),
                 ),
               ),
               focusedBorder: OutlineInputBorder(
@@ -643,7 +649,10 @@ class _TaskFormContentState extends State<TaskFormContent> {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Theme.of(context).colorScheme.shadow.withOpacity(0.05),
+                color: Theme.of(context)
+                    .colorScheme
+                    .shadow
+                    .withValues(alpha: 0.05),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
@@ -705,7 +714,10 @@ class _TaskFormContentState extends State<TaskFormContent> {
               end: Alignment.bottomRight,
               colors: [
                 Theme.of(context).colorScheme.primaryContainer,
-                Theme.of(context).colorScheme.primaryContainer.withOpacity(0.8),
+                Theme.of(context)
+                    .colorScheme
+                    .primaryContainer
+                    .withValues(alpha: 0.8),
               ],
             ),
             borderRadius: BorderRadius.circular(16),
@@ -780,7 +792,7 @@ class _TaskFormContentState extends State<TaskFormContent> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
             side: BorderSide(
-              color: theme.colorScheme.outline.withOpacity(0.2),
+              color: theme.colorScheme.outline.withValues(alpha: 0.2),
             ),
           ),
           color: theme.colorScheme.surface,
@@ -859,7 +871,8 @@ class _TaskFormContentState extends State<TaskFormContent> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                           side: BorderSide(
-                            color: theme.colorScheme.outline.withOpacity(0.2),
+                            color: theme.colorScheme.outline
+                                .withValues(alpha: 0.2),
                           ),
                         ),
                         color: theme.colorScheme.surface,
@@ -988,6 +1001,7 @@ class _TaskFormContentState extends State<TaskFormContent> {
   }
 
   Future<void> _selectDateTime(BuildContext context) async {
+    final theme = Theme.of(context);
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: scheduledAt.value,
@@ -995,11 +1009,11 @@ class _TaskFormContentState extends State<TaskFormContent> {
       lastDate: DateTime.now().add(const Duration(days: 365)),
       builder: (context, child) {
         return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: Theme.of(context).colorScheme,
+          data: theme.copyWith(
+            colorScheme: theme.colorScheme,
             textButtonTheme: TextButtonThemeData(
               style: TextButton.styleFrom(
-                foregroundColor: Theme.of(context).colorScheme.primary,
+                foregroundColor: theme.colorScheme.primary,
               ),
             ),
           ),

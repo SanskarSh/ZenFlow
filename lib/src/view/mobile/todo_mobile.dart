@@ -19,7 +19,7 @@ class TodoMobile extends GetView<TaskController> {
     return DefaultTabController(
       length: 3,
       child: Scaffold(
-        backgroundColor: theme.colorScheme.background,
+        backgroundColor: theme.colorScheme.surface,
         appBar: AppBar(
           title: const Text('My Tasks'),
           actions: [
@@ -41,7 +41,8 @@ class TodoMobile extends GetView<TaskController> {
               ),
             ],
             labelColor: theme.colorScheme.onSurface,
-            unselectedLabelColor: theme.colorScheme.onSurface.withOpacity(0.6),
+            unselectedLabelColor:
+                theme.colorScheme.onSurface.withValues(alpha: 0.6),
             indicatorColor: theme.colorScheme.primary,
           ),
         ),
@@ -71,13 +72,13 @@ class TodoMobile extends GetView<TaskController> {
                 Icon(
                   Icons.task_alt,
                   size: 64,
-                  color: theme.colorScheme.primary.withOpacity(0.5),
+                  color: theme.colorScheme.primary.withValues(alpha: 0.5),
                 ),
                 const SizedBox(height: 16),
                 Text(
                   'No tasks yet',
                   style: theme.textTheme.bodyLarge?.copyWith(
-                    color: theme.colorScheme.onBackground.withOpacity(0.6),
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                   ),
                 ),
               ],
@@ -107,7 +108,7 @@ class TodoMobile extends GetView<TaskController> {
       pos: ExpandableFabPos.right,
       overlayStyle: ExpandableFabOverlayStyle(
         blur: 2,
-        color: theme.colorScheme.surface.withOpacity(0.5),
+        color: theme.colorScheme.surface.withValues(alpha: 0.5),
       ),
       childrenAnimation: ExpandableFabAnimation.rotate,
       openButtonBuilder: RotateFloatingActionButtonBuilder(
