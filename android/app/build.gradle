@@ -24,7 +24,7 @@ if (flutterVersionName == null) {
 
 android {
     namespace = "com.zenflow.app"
-    compileSdk = 33
+    compileSdk = 34  // Updated from 33 to 34
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
@@ -34,7 +34,7 @@ android {
     defaultConfig {
         applicationId "com.zenflow.app"
         minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
+        targetSdk = 34
         versionCode = flutterVersionCode.toInteger()
         versionName = flutterVersionName
     }
