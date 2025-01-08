@@ -76,3 +76,6 @@ lib/generated_plugin_registrant.dart
 
 # Drift generated files
 *.g.dart
+
+# Test workflow
+.github/workflows/mobile-build-test.yml
