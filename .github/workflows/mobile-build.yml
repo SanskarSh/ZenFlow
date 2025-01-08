@@ -45,6 +45,15 @@ jobs:
           flutter-version: "3.27.1"
           channel: "stable"
 
+      - name: Verify Gradle Wrapper
+        run: |
+          cd android
+          if [ ! -f "./gradlew" ]; then
+            gradle wrapper
+          fi
+          chmod +x ./gradlew
+          cd ..
+
       - name: Clean Build Cache
         run: |
           flutter clean
