@@ -6,10 +6,6 @@ on:
       - "v*"
   workflow_dispatch:
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 permissions:
   contents: write
   issues: write
@@ -43,34 +39,6 @@ jobs:
           distribution: "zulu"
           java-version: "17"
 
-      - name: Setup Android SDK Tools
-        run: |
-          echo "y" | sudo softwareupdate --install-rosetta
-          echo "ANDROID_HOME=/Users/runner/Library/Android/sdk" >> $GITHUB_ENV
-          echo "ANDROID_SDK_ROOT=/Users/runner/Library/Android/sdk" >> $GITHUB_ENV
-          echo "/Users/runner/Library/Android/sdk/platform-tools" >> $GITHUB_PATH
-
-          # Download and install command line tools
-          wget -q https://dl.google.com/android/repository/commandlinetools-mac-9477386_latest.zip
-          unzip -q commandlinetools-mac-9477386_latest.zip
-          mkdir -p $ANDROID_HOME/cmdline-tools/
-          mv cmdline-tools $ANDROID_HOME/cmdline-tools/latest
-
-          # Accept licenses and install required packages
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
-            "platform-tools" \
-            "platforms;android-33" \
-            "build-tools;33.0.0" \
-            "ndk;25.2.9519653" \
-            "cmake;3.22.1"
-
-      - name: Setup Android SDK
-        uses: nttld/setup-ndk@v1
-        with:
-          ndk-version: r25c
-          add-to-path: false
-
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -79,9 +47,6 @@ jobs:
 
       - name: Get dependencies
         run: flutter pub get && flutter pub run build_runner build --delete-conflicting-outputs
-
-      - name: Check Android build
-        run: flutter analyze --no-fatal-warnings
 
       - name: Build Android APK
         run: flutter build apk --release --split-per-abi
@@ -112,21 +77,12 @@ jobs:
           body: |
             Release ${{ github.ref_name }}
 
-            ## Version Information
-            - Release Date: $(date +'%Y-%m-%d')
-            - Flutter Version: 3.27.1
-
             ## Downloads
-            - [Android APK (arm64-v8a)](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/app-release-arm64-v8a.apk)
-            - [Android APK (armeabi-v7a)](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/app-release-armeabi-v7a.apk)
-            - [Android APK (x86_64)](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/app-release-x86_64.apk)
-            - [Android App Bundle](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/app-release.aab)
-            - [iOS IPA](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/app.ipa)
-
-            ## SHA-256 Checksums
-            ```
-            $(sha256sum build/app/outputs/flutter-apk/app-release-*.apk build/app/outputs/bundle/release/app-release.aab build/ios/iphoneos/app.ipa)
-            ```
+            - Android APK (arm64-v8a)
+            - Android APK (armeabi-v7a)
+            - Android APK (x86_64)
+            - Android App Bundle
+            - iOS IPA
           draft: false
           prerelease: false
         env:
