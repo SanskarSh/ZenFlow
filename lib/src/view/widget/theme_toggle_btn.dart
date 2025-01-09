@@ -1,16 +1,14 @@
-import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:todo/src/controller/theme_controller.dart';
+import 'package:todo/src/core/common/ui_imports.dart';
 
-class ToggleTheme extends GetView<SettingsController> {
+class ToggleTheme extends GetView<ThemeController> {
   const ToggleTheme({super.key, required this.controller});
 
   @override
-  final SettingsController controller;
+  final ThemeController controller;
 
   @override
   Widget build(BuildContext context) {
-    return GetBuilder<SettingsController>(
+    return GetBuilder<ThemeController>(
       init: controller,
       builder: (controller) => IconButton(
         onPressed: controller.toggleTheme,

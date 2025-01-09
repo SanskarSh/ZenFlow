@@ -1,31 +1,21 @@
-import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:todo/src/data/db/dao/dao.dart';
-import 'package:todo/src/core/theme/theme.dart';
-import 'package:todo/src/core/binding/app_binding.dart';
-import 'package:todo/src/controller/theme_controller.dart';
-import 'package:todo/src/controller/layout_controller.dart';
+import 'package:todo/src/view/binding/app_binding.dart';
+import 'package:todo/src/view/controller/layout_controller.dart';
+import 'package:todo/src/core/common/ui_imports.dart';
 
 class MyApp extends StatelessWidget {
-  final TodoDao todoDao;
-  final SettingsController settingsController;
-
-  const MyApp({
-    super.key,
-    required this.todoDao,
-    required this.settingsController,
-  });
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return GetBuilder<SettingsController>(
+    final settingsController = Get.find<ThemeController>();
+    return GetBuilder<ThemeController>(
       init: settingsController,
       builder: (controller) {
         return GetMaterialApp(
-          initialBinding: AppBinding(todoDao: todoDao),
+          initialBinding: AppBinding(),
           themeMode: settingsController.themeMode,
-          theme: MyTheme.lightTheme(context),
-          darkTheme: MyTheme.darkTheme(context),
+          theme: AppTheme.lightTheme(context),
+          darkTheme: AppTheme.darkTheme(context),
           home: const ResponsiveLayout(),
         );
       },

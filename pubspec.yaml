@@ -47,6 +47,9 @@ dependencies:
   intl: ^0.20.1
   carousel_slider: ^5.0.0
   shared_preferences: ^2.3.5
+  workmanager: ^0.5.2
+  flutter_local_notifications: ^18.0.1
+  timezone: ^0.10.0
 
 dev_dependencies:
   flutter_test:
