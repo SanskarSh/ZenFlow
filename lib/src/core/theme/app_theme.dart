@@ -26,6 +26,7 @@ class AppTheme {
         onSecondary: colors.onSecondaryColor,
         tertiary: colors.tertiaryColor,
         onTertiary: colors.onTertiaryColor,
+        tertiaryContainer: colors.accentColor,
         error: const Color(0xFFFF5252),
         onError: Colors.white,
       ),

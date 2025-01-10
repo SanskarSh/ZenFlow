@@ -2,7 +2,17 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <application
+        <service
+            android:name="dev.flutter.background_service.BackgroundService"
+            android:foregroundServiceType="dataSync"
+            android:exported="false">
+        </service>
+        <receiver
+            android:name="dev.flutter.background_service.WatchdogReceiver"
+            android:exported="false">
+        </receiver>
         android:label="ZenFlow"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">

@@ -8,6 +8,10 @@ class DescriptionTextField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
+    final descController = TextEditingController(text: description.value).obs;
+
+    ever(descController, (_) => description.value = descController.value.text);
+
     return Container(
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
@@ -45,6 +49,7 @@ class DescriptionTextField extends StatelessWidget {
             ),
           ),
           TextFormField(
+            controller: descController.value,
             style: const TextStyle(
               fontSize: 16,
             ),

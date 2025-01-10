@@ -1,14 +1,9 @@
 import 'package:todo/src/core/common/ui_imports.dart';
 
 class CarryForward extends StatelessWidget {
-  const CarryForward({
-    super.key,
-    required this.isCarryForward,
-    required this.context,
-  });
+  const CarryForward({super.key, required this.isCarryForward});
 
   final RxBool isCarryForward;
-  final BuildContext context;
 
   @override
   Widget build(BuildContext context) {

@@ -11,8 +11,11 @@ abstract class TaskRepository {
 
   Future<String> createTask(TasksCompanion task);
   Future<void> createSubTask(SubTasksCompanion subTask);
+  Future<void> createReminder(RemindersCompanion reminder);
 
-  Future<void> updateTask(Task task);
+  Future<void> updateTask(TaskWithSubTasks task);
+
+  Future<void> deleteReminder(int reminderId);
   Future<void> deleteTask(String taskId);
   Future<void> deleteSubTask(String taskId, int subtaskId);
 

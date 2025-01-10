@@ -15,6 +15,7 @@ class TaskDao extends DatabaseAccessor<AppDatabase> with _$TaskDaoMixin {
     allCompletedTasks = getCompletedTasks();
   }
 
+  // Get all tasks
   Stream<List<TaskWithSubTasks>> getTasks({required bool isRoutine}) {
     final query = select(tasks).join([
       leftOuterJoin(subTasks, subTasks.taskId.equalsExp(tasks.id)),
@@ -43,6 +44,7 @@ class TaskDao extends DatabaseAccessor<AppDatabase> with _$TaskDaoMixin {
     });
   }
 
+  // Get all reminders
   Stream<List<RemindersCompanion>> getReminders() {
     final query = select(reminders);
 
@@ -70,6 +72,7 @@ class TaskDao extends DatabaseAccessor<AppDatabase> with _$TaskDaoMixin {
   // Get all completed tasks
   late final Stream<List<TaskWithSubTasks>> allCompletedTasks;
 
+  // Get task by id
   Future<TaskWithSubTasks?> getTaskWithSubtasksById(String id) async {
     final query = select(tasks).join([
       leftOuterJoin(subTasks, subTasks.taskId.equalsExp(tasks.id)),
@@ -127,20 +130,36 @@ class TaskDao extends DatabaseAccessor<AppDatabase> with _$TaskDaoMixin {
     return task.id.value;
   }
 
+  // Insert new subtask
   Future<void> insertSubTask(SubTasksCompanion subTask) async {
     await into(subTasks).insert(subTask);
   }
 
+  // Insert new reminder
+  Future<void> insertReminder(RemindersCompanion reminder) async {
+    await into(reminders).insert(reminder);
+  }
+
   // Insert new subtask
-  Future<void> insertSubtasks(List<SubTasksCompanion> subtasks) async {
+  Future<void> insertSubtasks(List<SubTask> subtasks) async {
     await batch((batch) {
       batch.insertAll(subTasks, subtasks);
     });
   }
 
   // Update task
-  Future<void> updateTask(Task task) {
-    return update(tasks).replace(task);
+  Future<void> updateTask(TaskWithSubTasks task) {
+    return transaction(() async {
+      await update(tasks).replace(task.task);
+      await (delete(subTasks)..where((t) => t.taskId.equals(task.task.id)))
+          .go();
+
+      if (task.subTasks.isNotEmpty) {
+        await batch((batch) {
+          batch.insertAll(subTasks, task.subTasks);
+        });
+      }
+    });
   }
 
   // Update routine
@@ -158,6 +177,11 @@ class TaskDao extends DatabaseAccessor<AppDatabase> with _$TaskDaoMixin {
     return (delete(tasks)..where((tbl) => tbl.id.equals(routineId))).go();
   }
 
+  // Delete reminder
+  Future<void> deleteReminder(int taskId) {
+    return (delete(reminders)..where((tbl) => tbl.id.equals(taskId))).go();
+  }
+
   // Delete subtask
   Future<void> deleteSubTask(String taskId, int subtaskId) {
     return (delete(subTasks)
@@ -166,6 +190,12 @@ class TaskDao extends DatabaseAccessor<AppDatabase> with _$TaskDaoMixin {
         .go();
   }
 
+  // Delete all subtasks
+  Future<void> deleteAllSubTasks(String taskId) {
+    return (delete(subTasks)..where((tbl) => tbl.taskId.equals(taskId))).go();
+  }
+
+  // Toggle task completed and delete subtasks
   Future<void> toggleTaskCompleted(String taskId, bool isCompleted) async {
     await transaction(() async {
       await (update(tasks)..where((t) => t.id.equals(taskId))).write(
@@ -182,6 +212,7 @@ class TaskDao extends DatabaseAccessor<AppDatabase> with _$TaskDaoMixin {
     });
   }
 
+  // Toggle subtask completed
   Future<void> toggleSubtaskCompleted(
     String taskId,
     int subtaskId,
@@ -207,6 +238,7 @@ class TaskDao extends DatabaseAccessor<AppDatabase> with _$TaskDaoMixin {
     });
   }
 
+  // Run daily maintenance
   Future<void> updateTaskStats(TaskStatistics stats) async {
     await into(taskStats).insertOnConflictUpdate(
       TaskStatsCompanion.insert(

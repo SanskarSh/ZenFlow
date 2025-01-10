@@ -1,10 +1,14 @@
 import 'package:todo/src/core/common/ui_imports.dart';
 import 'package:todo/src/core/constant/enumerates.dart';
+import 'package:todo/src/core/utils/date_utils.dart';
+import 'package:todo/src/data/local_db/dao/task_dao.dart';
+import 'package:drift/drift.dart' as drift_data_class;
 
 // Form Widgets
 import 'package:todo/src/view/widget/task_form/form_content_builder.dart';
 import 'package:todo/src/view/widget/task_form/widgets/carry_forward.dart';
 import 'package:todo/src/view/widget/task_form/widgets/description_text_field.dart';
+import 'package:todo/src/view/widget/task_form/widgets/form_navigation_buttons.dart';
 import 'package:todo/src/view/widget/task_form/widgets/info_tip_card.dart';
 import 'package:todo/src/view/widget/task_form/widgets/priority_caraousal.dart';
 import 'package:todo/src/view/widget/task_form/widgets/scheduled_date.dart';
@@ -14,162 +18,283 @@ import 'package:todo/src/view/widget/task_form/widgets/title_text_field.dart';
 import 'package:todo/src/view/widget/task_form/widgets/week_days_selector.dart';
 
 class TaskForm extends GetView<TaskController> {
-  final RxBool isRoutine;
-  final Color bgColor;
-  const TaskForm(this.bgColor, {super.key, required this.isRoutine});
+  final FormType formType;
+  final TaskWithSubTasks? edit;
+
+  const TaskForm({super.key, required this.formType, this.edit});
   @override
   Widget build(BuildContext context) {
-    return TaskFormContent(
-      isRoutine: isRoutine,
-      bgColor: bgColor,
-    );
+    if (formType == FormType.reminder) {
+      return const ReminderFormContent();
+    } else {
+      if (formType == FormType.routine) {
+        return TaskFormContent(isRoutine: true.obs, edit: edit);
+      } else {
+        return TaskFormContent(isRoutine: false.obs, edit: edit);
+      }
+    }
   }
 }
 
-class TaskFormContent extends StatefulWidget {
+class TaskFormContent extends StatelessWidget {
+  final TaskWithSubTasks? edit;
   final RxBool isRoutine;
-  final Color bgColor;
 
-  const TaskFormContent(
-      {super.key, required this.isRoutine, required this.bgColor});
-  @override
-  TaskFormContentState createState() => TaskFormContentState();
-}
+  late final TaskController controller;
+  late final PageController pageController;
+  late final GlobalKey<FormState> formKey;
+  late final RxInt currentPage;
+  final int totalPages = 3;
 
-class TaskFormContentState extends State<TaskFormContent> {
-  final TaskController controller = Get.find<TaskController>();
-  final PageController _pageController = PageController();
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final RxInt _currentPage = 0.obs;
-  final int _totalPages = 3;
+  // Move the observable variables to be late final
+  late final RxString title;
+  late final RxString description;
+  late final Rx<DateTime> scheduledAt;
+  late final Rx<Priority> priority;
+  late final RxList<WeekDay> assignedWeekDays;
+  late final RxBool isCarryForward;
+  late final RxList<SubTasksCompanion> subTasks;
 
-  // Form data using GetX observables
-  final RxString title = ''.obs;
-  final RxString description = ''.obs;
-  final Rx<DateTime> scheduledAt = DateTime.now().obs;
-  final Rx<Priority> priority = Priority.medium.obs;
-  // final Rx<WeekDay> assignedWeekDay =
-  //     WeekDay.values[DateTime.now().weekday % 7].obs;
-  final RxList<WeekDay> assignedWeekDays = <WeekDay>[].obs;
-  final RxBool isCarryForward = false.obs;
-  final RxList<SubTasksCompanion> subTasks = <SubTasksCompanion>[].obs;
+  TaskFormContent({super.key, required this.isRoutine, this.edit}) {
+    // Initialize controllers and keys
+    controller = Get.find<TaskController>();
+    pageController = PageController();
+    formKey = GlobalKey<FormState>();
+    currentPage = 0.obs;
 
-  void _submitForm() {
-    if (!_formKey.currentState!.validate()) {
-      return;
+    // Initialize form data
+    title = ''.obs;
+    description = ''.obs;
+    scheduledAt = DateTime.now().obs;
+    priority = Priority.medium.obs;
+    assignedWeekDays = <WeekDay>[].obs;
+    isCarryForward = false.obs;
+    subTasks = <SubTasksCompanion>[].obs;
+
+    if (edit != null) {
+      // Set basic information
+      title.value = edit!.task.title;
+      description.value = edit!.task.description ?? '';
+      priority.value = edit!.task.priority;
+
+      // Set schedule and settings
+      if (edit!.task.isRoutine) {
+        isRoutine.value = true;
+        // Convert timeOfRoutineScheduled (minutes) to DateTime
+        if (edit!.task.timeOfRoutineScheduled != null) {
+          final hours = edit!.task.timeOfRoutineScheduled! ~/ 60;
+          final minutes = edit!.task.timeOfRoutineScheduled! % 60;
+          final now = DateTime.now();
+          scheduledAt.value = DateTime(
+            now.year,
+            now.month,
+            now.day,
+            hours,
+            minutes,
+          );
+        }
+        // Set assigned week days
+        if (edit!.task.assignedWeekDays != null) {
+          assignedWeekDays.value = WeekDayConverter.decodeWeekDays(
+            edit!.task.assignedWeekDays,
+          )!;
+        }
+      } else {
+        isRoutine.value = false;
+        if (edit!.task.dateAndTimeOfTaskScheduled != null) {
+          scheduledAt.value = edit!.task.dateAndTimeOfTaskScheduled!;
+        }
+        isCarryForward.value = edit!.task.isCarryForward;
+      }
+
+      // Set subtasks
+      if (edit!.subTasks.isNotEmpty) {
+        subTasks.value = edit!.subTasks
+            .map((subtask) => SubTasksCompanion(
+                  id: drift_data_class.Value(subtask.id!),
+                  taskId: drift_data_class.Value(subtask.taskId),
+                  title: drift_data_class.Value(subtask.title),
+                  isCompleted: drift_data_class.Value(subtask.isCompleted),
+                ))
+            .toList();
+      }
     }
-
-    if (widget.isRoutine.value && assignedWeekDays.isEmpty) {
-      Get.snackbar(
-        'Error',
-        'Please select at least one week day for routine task',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
-      return;
-    }
-
-    controller
-        .createTask(
-      title: title.value,
-      description: description.value.isEmpty ? null : description.value,
-      scheduledAt: scheduledAt.value,
-      priority: priority.value,
-      isRoutine: widget.isRoutine.value,
-      assignedWeekDays: widget.isRoutine.value ? assignedWeekDays : null,
-      isCarryForward: isCarryForward.value,
-      subTasks: subTasks.isNotEmpty ? subTasks : null,
-    )
-        .then((_) {
-      Get.back();
-      Get.snackbar(
-        'Success',
-        'Task created successfully',
-        snackPosition: SnackPosition.BOTTOM,
-      );
-    }).catchError((error) {
-      Get.snackbar(
-        'Error',
-        error.toString(),
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
-    });
   }
 
   @override
   Widget build(BuildContext context) {
+    void submitForm() {
+      if (!formKey.currentState!.validate()) {
+        return;
+      }
+
+      if (isRoutine.value && assignedWeekDays.isEmpty) {
+        Get.snackbar(
+          'Error',
+          'Please select at least one week day for routine task',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+        return;
+      }
+
+      final Future<void> action;
+      if (edit != null) {
+        // Create updated task
+        final updatedTask = Task(
+          id: edit!.task.id,
+          title: title.value,
+          description: description.value.isEmpty ? null : description.value,
+          dateAndTimeOfTaskScheduled:
+              isRoutine.value ? null : scheduledAt.value,
+          timeOfRoutineScheduled: isRoutine.value
+              ? scheduledAt.value.hour * 60 + scheduledAt.value.minute
+              : null,
+          priority: priority.value,
+          isRoutine: isRoutine.value,
+          assignedWeekDays: isRoutine.value
+              ? WeekDayConverter.encodeWeekDays(assignedWeekDays)
+              : null,
+          isCarryForward: isCarryForward.value,
+          isCompleted: edit!.task.isCompleted,
+          createdAt: edit!.task.createdAt,
+          editedAt: DateTime.now(),
+        );
+
+        final updatedSubTasks = subTasks.map((subtask) {
+          if (subtask.id.present) {
+            return SubTask(
+              id: subtask.id.value,
+              taskId: edit!.task.id,
+              title: subtask.title.value,
+              isCompleted: subtask.isCompleted.value ?? false,
+              description: subtask.description.value,
+            );
+          } else {
+            return SubTask(
+              taskId: edit!.task.id,
+              title: subtask.title.value,
+              isCompleted: subtask.isCompleted.value ?? false,
+              description: subtask.description.value,
+            );
+          }
+        }).toList();
+
+        final updatedTaskWithSubtasks = TaskWithSubTasks(
+          task: updatedTask,
+          subTasks: updatedSubTasks,
+        );
+
+        action = controller.updateTask(updatedTaskWithSubtasks);
+      } else {
+        // Create new task
+        action = controller.createTask(
+          title: title.value,
+          description: description.value.isEmpty ? null : description.value,
+          scheduledAt: scheduledAt.value,
+          priority: priority.value,
+          isRoutine: isRoutine.value,
+          assignedWeekDays: isRoutine.value ? assignedWeekDays : null,
+          isCarryForward: isCarryForward.value,
+          subTasks: subTasks.isNotEmpty
+              ? subTasks
+                  .map((st) => SubTasksCompanion(
+                        title: st.title,
+                        isCompleted: const drift_data_class.Value(false),
+                        description: const drift_data_class.Value(null),
+                      ))
+                  .toList()
+              : null,
+        );
+      }
+
+      action.then((_) {
+        Get.back();
+        Get.snackbar(
+          'Success',
+          edit != null
+              ? 'Task updated successfully'
+              : 'Task created successfully',
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      }).catchError((error) {
+        Get.snackbar(
+          'Error',
+          error.toString(),
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      });
+    }
+
     final theme = Theme.of(context);
-    return Scaffold(
-      backgroundColor: theme.colorScheme.surface,
-      body: SafeArea(
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Flexible(
-                child: PageView(
-                  controller: _pageController,
-                  physics: const NeverScrollableScrollPhysics(),
-                  onPageChanged: (int page) => _currentPage.value = page,
-                  children: [
-                    FormContentBuilder(
-                      title: 'Basic Information',
-                      icon: Icons.info_outline,
-                      content: _buildBasicInfoPage(),
-                    ),
-                    FormContentBuilder(
-                      title: 'Schedule & Settings',
-                      icon: Icons.schedule,
-                      content: _buildScheduleSettingsPage(),
-                    ),
-                    FormContentBuilder(
-                      title: 'Sub Tasks',
-                      icon: Icons.checklist,
-                      content: _buildSubTasksPage(),
-                    ),
-                  ],
-                ),
+    return SafeArea(
+      child: Form(
+        key: formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Flexible(
+              child: PageView(
+                controller: pageController,
+                physics: const NeverScrollableScrollPhysics(),
+                onPageChanged: (int page) => currentPage.value = page,
+                children: [
+                  FormContentBuilder(
+                    title: 'Basic Information',
+                    icon: Icons.info_outline,
+                    content: _buildBasicInfoPage(),
+                  ),
+                  FormContentBuilder(
+                    title: 'Schedule & Settings',
+                    icon: Icons.schedule,
+                    content: _buildScheduleSettingsPage(isRoutine.value),
+                  ),
+                  FormContentBuilder(
+                    title: 'Sub Tasks',
+                    icon: Icons.checklist,
+                    content: _buildSubTasksPage(),
+                  ),
+                ],
               ),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surface,
-                  border: Border(
-                    top: BorderSide(
-                      color: theme.colorScheme.outline.withValues(alpha: .1),
-                    ),
+            ),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surface,
+                border: Border(
+                  top: BorderSide(
+                    color: theme.colorScheme.outline.withValues(alpha: .1),
                   ),
                 ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  spacing: 16,
-                  children: [
-                    Obx(
-                      () => LinearProgressIndicator(
-                        value: (_currentPage.value + 1) / _totalPages,
-                        backgroundColor:
-                            theme.colorScheme.surfaceContainerHighest,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          theme.colorScheme.primary,
-                        ),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                spacing: 16,
+                children: [
+                  Obx(
+                    () => LinearProgressIndicator(
+                      value: (currentPage.value + 1) / totalPages,
+                      backgroundColor:
+                          theme.colorScheme.surfaceContainerHighest,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        theme.colorScheme.primary,
                       ),
                     ),
-                    FormNavigationButtons(
-                      currentPage: _currentPage,
-                      pageController: _pageController,
-                      totalPages: _totalPages,
-                      formKey: _formKey,
-                      submitForm: _submitForm,
-                    )
-                  ],
-                ),
+                  ),
+                  FormNavigationButtons(
+                    currentPage: currentPage,
+                    pageController: pageController,
+                    totalPages: totalPages,
+                    formKey: formKey,
+                    submitForm: submitForm,
+                  )
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -178,7 +303,6 @@ class TaskFormContentState extends State<TaskFormContent> {
   Widget _buildBasicInfoPage() {
     return Column(
       spacing: 24,
-      mainAxisSize: MainAxisSize.min,
       children: [
         // Title Input Section
         TitleTextField(title: title),
@@ -192,110 +316,125 @@ class TaskFormContentState extends State<TaskFormContent> {
     );
   }
 
-  Widget _buildScheduleSettingsPage() {
+  Widget _buildScheduleSettingsPage(bool isRoutine) {
     return Column(
       spacing: 24,
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Priority Section
         PriorityCarousel(priority: priority),
 
         // Schedule Section
-        ScheduledDate(scheduledAt: scheduledAt),
+        ScheduledDate(scheduledAt: scheduledAt, isRoutine: isRoutine),
 
         // Task Settings Section
-        CarryForward(isCarryForward: isCarryForward, context: context),
+        if (!isRoutine) CarryForward(isCarryForward: isCarryForward),
 
         // Routine Days Section
         WeekDaysSelector(
-            assignedWeekDays: assignedWeekDays, isRoutine: widget.isRoutine)
+          assignedWeekDays: assignedWeekDays,
+          isRoutine: isRoutine.obs,
+        )
       ],
     );
   }
 
   Widget _buildSubTasksPage() {
-    final theme = Theme.of(context);
     return Column(
-      spacing: 16,
+      spacing: 24,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Sub tasks tip
-        SubTaskTipCard(theme: theme),
+        const SubTaskTipCard(),
 
         // Sub Task List
-        SutTaskList(subTasks: subTasks),
+        SutTaskList(subTasks: subTasks, edit: edit),
       ],
     );
   }
 }
 
-class FormNavigationButtons extends StatelessWidget {
-  const FormNavigationButtons({
-    super.key,
-    required this.currentPage,
-    required this.pageController,
-    required this.totalPages,
-    required this.formKey,
-    required this.submitForm,
-  });
-
-  final RxInt currentPage;
-  final PageController pageController;
-  final int totalPages;
-  final GlobalKey<FormState> formKey;
-  final VoidCallback submitForm;
+class ReminderFormContent extends StatelessWidget {
+  const ReminderFormContent({super.key});
 
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
-    return Obx(
-      () => Padding(
-        padding: const EdgeInsets.only(top: 16.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            if (currentPage.value > 0)
-              ElevatedButton.icon(
-                style: theme.elevatedButtonTheme.style,
-                onPressed: () {
-                  pageController.previousPage(
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeInOut,
-                  );
-                },
-                icon: Icon(
-                  Icons.arrow_back,
-                  color: theme.colorScheme.onPrimary,
-                ),
-                label: Text('Previous', style: theme.textTheme.bodySmall),
-              ),
-            if (currentPage.value < totalPages - 1)
-              ElevatedButton.icon(
-                style: theme.elevatedButtonTheme.style,
-                onPressed: () {
-                  if (currentPage.value == 0 &&
-                      !formKey!.currentState!.validate()) {
-                    return;
-                  }
-                  pageController.nextPage(
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeInOut,
-                  );
-                },
-                icon: Icon(
-                  Icons.arrow_forward,
-                  color: theme.colorScheme.onPrimary,
-                ),
-                label: Text('Next', style: theme.textTheme.bodySmall),
-              ),
-            if (currentPage.value == totalPages - 1)
+    final TaskController controller = Get.find<TaskController>();
+    final RxString title = ''.obs;
+    final RxString description = ''.obs;
+    final Rx<DateTime> scheduledAt = DateTime.now().obs;
+
+    final GlobalKey<FormState> formKey = GlobalKey<FormState>();
+
+    void submitForm() {
+      if (!formKey.currentState!.validate()) {
+        return;
+      }
+
+      if (scheduledAt.value == DateTime.now() ||
+          scheduledAt.value.isBefore(DateTime.now())) {
+        Get.snackbar(
+          'Error',
+          'Please select a future date for reminder',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+        return;
+      }
+
+      controller
+          .createReminder(
+        title: title.value,
+        description: description.value.isEmpty ? null : description.value,
+        scheduledAt: scheduledAt.value,
+      )
+          .then((_) {
+        Get.back();
+        Get.snackbar('Success', 'Task created successfully',
+            snackPosition: SnackPosition.BOTTOM);
+      }).catchError((error) {
+        Get.snackbar(
+          'Error',
+          error.toString(),
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      });
+    }
+
+    return SafeArea(
+      child: Form(
+        key: formKey,
+        child: FormContentBuilder(
+          title: 'Add Reminder',
+          icon: Icons.info_outline,
+          content: Column(
+            spacing: 24,
+            children: [
+              // Tips Card
+              // TODO Make it customisable
+              const InfoTipCard(),
+
+              // Title Input Section
+              TitleTextField(title: title),
+
+              // Description Input Section
+              DescriptionTextField(description: description),
+
+              // Schedule Section
+              ScheduledDate(scheduledAt: scheduledAt, isRoutine: false),
+
+              // Submit Button
               ElevatedButton.icon(
                 style: theme.elevatedButtonTheme.style,
                 icon: Icon(Icons.check, color: theme.colorScheme.onPrimary),
                 label: Text('Submit', style: theme.textTheme.bodySmall),
-                onPressed: () => submitForm,
+                onPressed: submitForm,
               )
-          ],
+            ],
+          ),
         ),
       ),
     );

@@ -36,9 +36,14 @@ class TaskUseCases {
       id: drift_data_class.Value(taskId),
       title: drift_data_class.Value(title),
       description: drift_data_class.Value(description),
-      dateAndTimeOfTaskScheduled: drift_data_class.Value(scheduledAt),
+      dateAndTimeOfTaskScheduled: isRoutine
+          ? const drift_data_class.Value.absent()
+          : drift_data_class.Value(scheduledAt),
       priority: drift_data_class.Value(priority),
       isRoutine: drift_data_class.Value(isRoutine),
+      timeOfRoutineScheduled: isRoutine
+          ? drift_data_class.Value(scheduledAt.hour * 60 + scheduledAt.minute)
+          : const drift_data_class.Value.absent(),
       assignedWeekDays: assignedWeekDays != null
           ? drift_data_class.Value(
               WeekDayConverter.encodeWeekDays(assignedWeekDays))
@@ -58,12 +63,39 @@ class TaskUseCases {
     }
   }
 
-  Future<void> updateTask(Task task) async {
+  Future<void> createReminder({
+    required String title,
+    String? description,
+    required DateTime scheduledAt,
+  }) async {
+    final reminder = RemindersCompanion(
+      title: drift_data_class.Value(title),
+      description: drift_data_class.Value(description),
+      scheduledAt: drift_data_class.Value(scheduledAt),
+    );
+    await _repository.createReminder(reminder);
+  }
+
+  Future<void> addSubTask(String taskId, SubTask subTask) async {
+    SubTasksCompanion newSubTask = SubTasksCompanion(
+      taskId: drift_data_class.Value(taskId),
+      title: drift_data_class.Value(subTask.title),
+      description: drift_data_class.Value(subTask.description),
+      isCompleted: drift_data_class.Value(subTask.isCompleted),
+    );
+    await _repository.createSubTask(newSubTask);
+  }
+
+  Future<void> updateTask(TaskWithSubTasks task) async {
     await _repository.updateTask(task);
   }
 
   Future<void> deleteTask(String taskId) async {
     await _repository.deleteTask(taskId);
+  }
+
+  Future<void> deleteReminder(int reminderId) async {
+    await _repository.deleteReminder(reminderId);
   }
 
   Future<void> deleteSubTask(String taskId, int subtaskId) async {

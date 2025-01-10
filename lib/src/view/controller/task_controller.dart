@@ -56,6 +56,26 @@ class TaskController extends GetxController {
     }
   }
 
+  Future<void> addSubTask(String taskId, SubTask subTask) async {
+    await _taskUseCases.addSubTask(taskId, subTask);
+  }
+
+  Future<void> createReminder({
+    required String title,
+    String? description,
+    required DateTime scheduledAt,
+  }) {
+    return _taskUseCases.createReminder(
+      title: title,
+      description: description,
+      scheduledAt: scheduledAt,
+    );
+  }
+
+  Future<void> deleteReminder(int reminderId) async {
+    await _taskUseCases.deleteReminder(reminderId);
+  }
+
   Future<void> toggleTaskCompleted(String taskId, bool isCompleted) async {
     await _taskUseCases.toggleTaskCompleted(taskId, isCompleted);
   }
@@ -65,8 +85,12 @@ class TaskController extends GetxController {
     await _taskUseCases.toggleSubtaskCompleted(taskId, subTaskId, isCompleted);
   }
 
-  Future<void> updateTask(Task task) async {
-    await _taskUseCases.updateTask(task);
+  Future<void> updateTask(TaskWithSubTasks taskWithSubTasks) async {
+    try {
+      await _taskUseCases.updateTask(taskWithSubTasks);
+    } catch (e) {
+      throw 'Failed to update task: $e';
+    }
   }
 
   Future<void> deleteTask(String taskId) async {

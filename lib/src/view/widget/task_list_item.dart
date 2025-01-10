@@ -1,10 +1,13 @@
 import 'package:intl/intl.dart';
+import 'package:todo/src/core/constant/enumerates.dart';
+import 'package:todo/src/data/local_db/dao/task_dao.dart';
+import 'package:todo/src/view/widget/task_form/add_sub_task_dialog.dart';
 import 'package:todo/src/view/widget/task_form/task_form.dart';
 import 'package:todo/src/core/common/ui_imports.dart';
 
 class TaskListItem extends GetView<TaskController> {
-  final dynamic task;
-  const TaskListItem({super.key, this.task});
+  final TaskWithSubTasks task;
+  const TaskListItem({super.key, required this.task});
 
   @override
   Widget build(BuildContext context) {
@@ -13,6 +16,9 @@ class TaskListItem extends GetView<TaskController> {
 
     final isExpanded = false.obs;
     final hasSubtasks = task.subTasks.isNotEmpty;
+    final isRoutine = task.task.isRoutine;
+    final int hours = isRoutine ? task.task.timeOfRoutineScheduled! ~/ 60 : 0;
+    final int minutes = isRoutine ? task.task.timeOfRoutineScheduled! % 60 : 0;
 
     return Obx(
       () => Card(
@@ -113,13 +119,24 @@ class TaskListItem extends GetView<TaskController> {
                             color: theme.colorScheme.primary,
                           ),
                           const SizedBox(width: 4),
-                          Text(
-                            dateFormat.format(task.task.createdAt),
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurface
-                                  .withValues(alpha: 0.6),
+                          if (isRoutine) ...[
+                            Text(
+                              "${hours > 12 ? hours - 12 : hours}:$minutes ${hours >= 12 ? 'PM' : 'AM'}",
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurface
+                                    .withValues(alpha: 0.6),
+                              ),
                             ),
-                          ),
+                          ] else ...[
+                            Text(
+                              dateFormat.format(
+                                  task.task.dateAndTimeOfTaskScheduled!),
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurface
+                                    .withValues(alpha: 0.6),
+                              ),
+                            ),
+                          ]
                         ],
                       ),
                       Row(
@@ -129,8 +146,8 @@ class TaskListItem extends GetView<TaskController> {
                               Icons.add_task,
                               color: theme.colorScheme.primary,
                             ),
-                            onPressed: () =>
-                                _showAddSubtaskDialog(context, task),
+                            onPressed: () => _addSubTask(task.task.id),
+                            // _showAddSubtaskDialog(context, task),
                           ),
                           IconButton(
                             icon: Icon(
@@ -150,7 +167,7 @@ class TaskListItem extends GetView<TaskController> {
                       ),
                     ],
                   ),
-                  if (task.task.isRoutine) ...[
+                  if (!isRoutine && task.task.isCarryForward) ...[
                     const SizedBox(height: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(
@@ -170,7 +187,7 @@ class TaskListItem extends GetView<TaskController> {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            'Routine Task',
+                            'Carry Forward',
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.secondary,
                             ),
@@ -252,56 +269,29 @@ class TaskListItem extends GetView<TaskController> {
     );
   }
 
-  void _showAddSubtaskDialog(BuildContext context, dynamic task) {
-    // final theme = Theme.of(context);
-    final subtaskController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Add Subtask'),
-        content: TextField(
-          controller: subtaskController,
-          decoration: const InputDecoration(
-            hintText: 'Enter subtask',
-            border: OutlineInputBorder(),
-          ),
-          autofocus: true,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (subtaskController.text.isNotEmpty) {
-                // TODO: Add subtask
-                Navigator.pop(context);
-              }
-            },
-            child: const Text('Add'),
-          ),
-        ],
-      ),
-    );
+  void _addSubTask(String taskId) async {
+    final result =
+        await Get.dialog<SubTasksCompanion>(AddSubTaskDialog(taskId: taskId));
+    if (result != null) {
+      final newSubtask = SubTask(
+        taskId: task.task.id,
+        title: result.title.value,
+        description: result.description.value,
+        isCompleted: false,
+      );
+      controller.addSubTask(task.task.id, newSubtask);
+      Get.back();
+    }
   }
 
-  // TODO: Implement onEdit
-  void onEdit(dynamic task, BuildContext context) {
-    final theme = Theme.of(context);
-    final color = task.task.isRoutine
-        ? theme.colorScheme.secondary
-        : theme.colorScheme.primary;
-
+  void onEdit(BuildContext context, TaskWithSubTasks task) {
     Get.dialog(
       Dialog(
         child: ClipRRect(
           borderRadius: BorderRadius.circular(28),
           child: TaskForm(
-            color,
-            isRoutine: task.task.isRoutine.obs,
-            // editTask: task,
+            formType: task.task.isRoutine ? FormType.routine : FormType.task,
+            edit: task,
           ),
         ),
       ),

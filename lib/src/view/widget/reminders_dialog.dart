@@ -65,7 +65,7 @@ class RemindersDialog extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: theme.colorScheme.surface.withOpacity(0.2),
+              color: theme.colorScheme.surface.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
@@ -87,7 +87,7 @@ class RemindersDialog extends StatelessWidget {
               Text(
                 'Stay on track with your tasks',
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onPrimary.withOpacity(0.8),
+                  color: theme.colorScheme.onPrimary.withValues(alpha: .8),
                 ),
               ),
             ],
@@ -134,12 +134,14 @@ class RemindersDialog extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(32),
       child: Column(
+        spacing: 8,
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+              color: theme.colorScheme.surfaceContainerHighest
+                  .withValues(alpha: .3),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -148,7 +150,6 @@ class RemindersDialog extends StatelessWidget {
               color: theme.colorScheme.primary,
             ),
           ),
-          const SizedBox(height: 24),
           Text(
             'No Reminders Yet',
             style: theme.textTheme.titleMedium?.copyWith(
@@ -156,7 +157,6 @@ class RemindersDialog extends StatelessWidget {
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 8),
           Text(
             'Create a task and set a reminder\nto get started',
             textAlign: TextAlign.center,
@@ -165,31 +165,31 @@ class RemindersDialog extends StatelessWidget {
               height: 1.5,
             ),
           ),
-          const SizedBox(height: 24),
-          FilledButton.icon(
-            onPressed: () => Get.back(),
-            icon: const Icon(Icons.add),
-            label: const Text('Add Task'),
-            style: FilledButton.styleFrom(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24,
-                vertical: 12,
-              ),
-            ),
-          ),
         ],
       ),
     );
   }
 
   Widget _buildFooter(ThemeData theme) {
+    final reminders = Get.find<TaskController>().reminders;
+    void clearAll() {
+      for (var reminder in reminders) {
+        Get.find<TaskController>().deleteReminder(reminder.id.value!);
+      }
+      Get.back();
+    }
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
+        borderRadius: const BorderRadius.only(
+          bottomLeft: Radius.circular(28),
+          bottomRight: Radius.circular(28),
+        ),
         border: Border(
           top: BorderSide(
-            color: theme.colorScheme.outlineVariant.withOpacity(0.2),
+            color: theme.colorScheme.outlineVariant.withValues(alpha: .2),
           ),
         ),
       ),
@@ -215,11 +215,7 @@ class RemindersDialog extends StatelessWidget {
                       child: const Text('Cancel'),
                     ),
                     FilledButton(
-                      onPressed: () {
-                        // Implement clear all
-                        Get.back();
-                        Get.back();
-                      },
+                      onPressed: clearAll,
                       style: FilledButton.styleFrom(
                         backgroundColor: theme.colorScheme.error,
                       ),
@@ -236,7 +232,7 @@ class RemindersDialog extends StatelessWidget {
   }
 }
 
-class _ReminderItem extends StatelessWidget {
+class _ReminderItem extends GetView<TaskController> {
   final RemindersCompanion reminder;
   final bool isLast;
 
@@ -271,7 +267,7 @@ class _ReminderItem extends StatelessWidget {
         ),
       ),
       onDismissed: (_) {
-        // Implement delete reminder
+        controller.deleteReminder(reminder.id.value!);
       },
       child: Container(
         margin: EdgeInsets.only(
@@ -283,100 +279,67 @@ class _ReminderItem extends StatelessWidget {
           color: theme.colorScheme.surface,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: theme.colorScheme.outlineVariant.withOpacity(0.2),
+            color: theme.colorScheme.outlineVariant.withValues(alpha: .2),
           ),
           boxShadow: [
             BoxShadow(
-              color: theme.colorScheme.shadow.withOpacity(0.05),
+              color: theme.colorScheme.shadow.withValues(alpha: .05),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
           ],
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              contentPadding: const EdgeInsets.all(16),
-              leading: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  Icons.notifications_active,
-                  color: theme.colorScheme.onPrimaryContainer,
-                ),
-              ),
-              title: Text(
-                reminder.title.value,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (reminder.description.value != null) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      reminder.description.value!,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      _buildInfoChip(
-                        theme,
-                        Icons.access_time,
-                        timeFormat.format(reminder.scheduledAt.value),
-                        theme.colorScheme.primary,
-                      ),
-                      const SizedBox(width: 8),
-                      _buildInfoChip(
-                        theme,
-                        Icons.calendar_today,
-                        dateFormat.format(reminder.scheduledAt.value),
-                        theme.colorScheme.secondary,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              trailing: PopupMenuButton(
-                icon: Icon(
-                  Icons.more_vert,
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-                itemBuilder: (context) => [
-                  PopupMenuItem(
-                    child: const ListTile(
-                      leading: Icon(Icons.edit),
-                      title: Text('Edit'),
-                      contentPadding: EdgeInsets.zero,
-                    ),
-                    onTap: () {
-                      // Implement edit
-                    },
-                  ),
-                  PopupMenuItem(
-                    child: const ListTile(
-                      leading: Icon(Icons.delete),
-                      title: Text('Delete'),
-                      contentPadding: EdgeInsets.zero,
-                    ),
-                    onTap: () {
-                      // Implement delete
-                    },
-                  ),
-                ],
-              ),
+        child: ListTile(
+          contentPadding: const EdgeInsets.all(16),
+          leading: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primaryContainer,
+              borderRadius: BorderRadius.circular(12),
             ),
-          ],
+            child: Icon(
+              Icons.notifications_active,
+              color: theme.colorScheme.onPrimaryContainer,
+            ),
+          ),
+          title: Text(
+            reminder.title.value,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (reminder.description.value != null) ...[
+                const SizedBox(height: 4),
+                Text(
+                  reminder.description.value!,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ],
+          ),
+          trailing: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              _buildInfoChip(
+                theme,
+                Icons.calendar_today,
+                dateFormat.format(reminder.scheduledAt.value),
+                theme.colorScheme.secondary,
+              ),
+              _buildInfoChip(
+                theme,
+                Icons.access_time,
+                timeFormat.format(reminder.scheduledAt.value),
+                theme.colorScheme.primary,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -391,7 +354,7 @@ class _ReminderItem extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: .1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(

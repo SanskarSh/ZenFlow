@@ -3,7 +3,7 @@ import 'package:todo/src/core/constant/enumerates.dart';
 
 class Tasks extends Table {
   // Common fields
-  TextColumn get id => text().unique()();
+  TextColumn get id => text()();
   TextColumn get title => text().withLength(min: 1, max: 255)();
   TextColumn get description => text().nullable()();
   // DateTimeColumn get scheduledAt => dateTime().check(scheduledAt.isBiggerThan(
@@ -20,8 +20,12 @@ class Tasks extends Table {
 
   // Routine fields
   BoolColumn get isRoutine => boolean().withDefault(const Constant(false))();
-  TextColumn get timeOfRoutineScheduled => text().nullable()();
+  // For routine tasks - stores only time as minutes since midnight (0-1439)
+  IntColumn get timeOfRoutineScheduled => integer().nullable()();
   TextColumn get assignedWeekDays => text().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
 }
 
 class SubTasks extends Table {

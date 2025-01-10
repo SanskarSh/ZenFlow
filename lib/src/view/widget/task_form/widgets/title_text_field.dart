@@ -11,6 +11,10 @@ class TitleTextField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
+    final titleController = TextEditingController(text: title.value).obs;
+
+    ever(titleController, (_) => title.value = titleController.value.text);
+
     return Container(
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
@@ -24,6 +28,7 @@ class TitleTextField extends StatelessWidget {
         ],
       ),
       child: TextFormField(
+        controller: titleController.value,
         style: theme.textTheme.bodyLarge,
         decoration: InputDecoration(
           hintText: 'What would you like to do?',

@@ -1,10 +1,10 @@
 import 'package:todo/src/core/common/ui_imports.dart';
 import 'package:flutter_expandable_fab/flutter_expandable_fab.dart';
 import 'package:icons_plus/icons_plus.dart';
+import 'package:todo/src/core/constant/enumerates.dart';
 import 'package:todo/src/view/widget/reminders_dialog.dart';
 import 'package:todo/src/view/widget/task_form/task_form.dart';
 import 'package:todo/src/view/widget/task_list_item.dart';
-// import 'package:todo/src/view/widget/theme_toggle_btn.dart';
 
 class TodoMobile extends GetView<TaskController> {
   const TodoMobile({super.key});
@@ -172,23 +172,24 @@ class TodoMobile extends GetView<TaskController> {
           icon: FontAwesome.list_check_solid,
           tooltip: "Add Task",
           color: theme.colorScheme.primary,
-          onPressed: () =>
-              _showAddTaskDialog(false, theme.colorScheme.primary, context),
+          onPressed: () => _showAddTaskDialog(
+              FormType.task, theme.colorScheme.primary, context),
         ),
         _buildFabChild(
           context: context,
           icon: EvaIcons.calendar_outline,
           tooltip: "Add Routine",
           color: theme.colorScheme.secondary,
-          onPressed: () =>
-              _showAddTaskDialog(true, theme.colorScheme.secondary, context),
+          onPressed: () => _showAddTaskDialog(
+              FormType.routine, theme.colorScheme.secondary, context),
         ),
         _buildFabChild(
           context: context,
           icon: EvaIcons.bell_outline,
           tooltip: "Add Reminder",
-          color: theme.colorScheme.tertiary,
-          onPressed: () {},
+          color: theme.colorScheme.tertiaryContainer,
+          onPressed: () => _showAddTaskDialog(
+              FormType.reminder, theme.colorScheme.tertiary, context),
         ),
       ],
     );
@@ -214,7 +215,8 @@ class TodoMobile extends GetView<TaskController> {
     );
   }
 
-  void _showAddTaskDialog(bool isRoutine, Color color, BuildContext context) {
+  void _showAddTaskDialog(
+      FormType formType, Color color, BuildContext context) {
     final key = Get.find<GlobalKey<ExpandableFabState>>();
     key.currentState?.toggle();
 
@@ -222,7 +224,7 @@ class TodoMobile extends GetView<TaskController> {
       Dialog(
         child: ClipRRect(
           borderRadius: BorderRadius.circular(28),
-          child: TaskForm(color, isRoutine: isRoutine.obs),
+          child: TaskForm(formType: formType),
         ),
       ),
       barrierDismissible: true,

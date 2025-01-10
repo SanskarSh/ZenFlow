@@ -1,4 +1,5 @@
 import 'package:todo/src/core/common/ui_imports.dart';
+import 'package:todo/src/core/constant/enumerates.dart';
 import 'package:todo/src/view/widget/task_form/task_form.dart';
 import 'package:todo/src/view/widget/task_list_item.dart';
 import 'package:todo/src/view/widget/theme_toggle_btn.dart';
@@ -153,7 +154,7 @@ class TodoWeb extends GetView<TaskController> {
           width: 400,
           child: ClipRRect(
             borderRadius: BorderRadius.circular(28),
-            child: TaskForm(color, isRoutine: isRoutine.obs),
+            child: const TaskForm(formType: FormType.task),
           ),
         ),
       ),

@@ -1,15 +1,11 @@
 import 'package:todo/src/core/common/ui_imports.dart';
 
 class SubTaskTipCard extends StatelessWidget {
-  const SubTaskTipCard({
-    super.key,
-    required this.theme,
-  });
-
-  final ThemeData theme;
+  const SubTaskTipCard({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(

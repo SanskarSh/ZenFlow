@@ -3,7 +3,12 @@ import 'package:todo/src/core/common/ui_imports.dart';
 
 class ScheduledDate extends StatelessWidget {
   final Rx<DateTime> scheduledAt;
-  const ScheduledDate({super.key, required this.scheduledAt});
+  final bool isRoutine;
+  const ScheduledDate({
+    super.key,
+    required this.scheduledAt,
+    required this.isRoutine,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +23,8 @@ class ScheduledDate extends StatelessWidget {
       ),
       color: theme.colorScheme.surface,
       child: InkWell(
-        onTap: () => _selectDateTime(context),
+        onTap: () =>
+            isRoutine ? _selectTime(context) : _selectDateTime(context),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -60,40 +66,44 @@ class ScheduledDate extends StatelessWidget {
                           spacing: 8,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .primaryContainer,
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Text(
-                                    DateFormat('MMM d')
-                                        .format(scheduledAt.value),
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
+                            if (!isRoutine) ...[
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
                                       color: Theme.of(context)
                                           .colorScheme
-                                          .onPrimaryContainer,
+                                          .primaryContainer,
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Text(
+                                      DateFormat('MMM d')
+                                          .format(scheduledAt.value),
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onPrimaryContainer,
+                                      ),
                                     ),
                                   ),
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  DateFormat('EEEE').format(scheduledAt.value),
-                                  style: TextStyle(
-                                    color:
-                                        Theme.of(context).colorScheme.onSurface,
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    DateFormat('EEEE')
+                                        .format(scheduledAt.value),
+                                    style: TextStyle(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface,
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
+                                ],
+                              ),
+                            ],
                             Row(
                               spacing: 4,
                               children: [
@@ -140,8 +150,37 @@ class ScheduledDate extends StatelessWidget {
   }
 
   Future<void> _selectDateTime(BuildContext context) async {
+    final DateTime? pickedDate = await _datePicker(context);
+    if (pickedDate != null) {
+      final TimeOfDay? pickedTime = await _timePicker(context);
+      if (pickedTime != null) {
+        scheduledAt.value = DateTime(
+          pickedDate.year,
+          pickedDate.month,
+          pickedDate.day,
+          pickedTime.hour,
+          pickedTime.minute,
+        );
+      }
+    }
+  }
+
+  Future<void> _selectTime(BuildContext context) async {
+    final TimeOfDay? pickedDate = await _timePicker(context);
+    if (pickedDate != null) {
+      scheduledAt.value = DateTime(
+        1,
+        1,
+        1,
+        pickedDate.hour,
+        pickedDate.minute,
+      );
+    }
+  }
+
+  Future<DateTime?> _datePicker(BuildContext context) async {
     final theme = Theme.of(context);
-    final DateTime? picked = await showDatePicker(
+    return await showDatePicker(
       context: context,
       initialDate: scheduledAt.value,
       firstDate: DateTime.now(),
@@ -160,38 +199,29 @@ class ScheduledDate extends StatelessWidget {
         );
       },
     );
+  }
 
-    if (picked != null) {
-      final TimeOfDay? time = await showTimePicker(
-        context: context,
-        initialTime: TimeOfDay.fromDateTime(scheduledAt.value),
-        builder: (context, child) {
-          return Theme(
-            data: theme.copyWith(
-              timePickerTheme: TimePickerThemeData(
-                backgroundColor: theme.colorScheme.surface,
-                hourMinuteShape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                dayPeriodShape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
+  Future<TimeOfDay?> _timePicker(BuildContext context) async {
+    final theme = Theme.of(context);
+    return await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(scheduledAt.value),
+      builder: (context, child) {
+        return Theme(
+          data: theme.copyWith(
+            timePickerTheme: TimePickerThemeData(
+              backgroundColor: theme.colorScheme.surface,
+              hourMinuteShape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              dayPeriodShape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
               ),
             ),
-            child: child!,
-          );
-        },
-      );
-
-      if (time != null) {
-        scheduledAt.value = DateTime(
-          picked.year,
-          picked.month,
-          picked.day,
-          time.hour,
-          time.minute,
+          ),
+          child: child!,
         );
-      }
-    }
+      },
+    );
   }
 }
