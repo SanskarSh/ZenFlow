@@ -1,5 +1,4 @@
-import 'package:drift/drift.dart';
-import 'package:todo/src/core/constant/enumerates.dart';
+import 'package:todo/src/core/common/data_imports.dart';
 
 class Tasks extends Table {
   // Common fields

@@ -43,6 +43,8 @@ class TaskFormContent extends StatelessWidget {
   late final TaskController controller;
   late final PageController pageController;
   late final GlobalKey<FormState> formKey;
+  late final FocusNode titleFocusNode;
+  late final FocusNode descriptionFocusNode;
   late final RxInt currentPage;
   final int totalPages = 3;
 
@@ -60,6 +62,8 @@ class TaskFormContent extends StatelessWidget {
     controller = Get.find<TaskController>();
     pageController = PageController();
     formKey = GlobalKey<FormState>();
+    titleFocusNode = FocusNode();
+    descriptionFocusNode = FocusNode();
     currentPage = 0.obs;
 
     // Initialize form data
@@ -139,6 +143,18 @@ class TaskFormContent extends StatelessWidget {
         return;
       }
 
+      if (scheduledAt.value == DateTime.now() ||
+          scheduledAt.value.isBefore(DateTime.now())) {
+        Get.snackbar(
+          'Error',
+          'Please select a future date for ${isRoutine.value ? 'routine' : 'task'}',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+        return;
+      }
+
       final Future<void> action;
       if (edit != null) {
         // Create updated task
@@ -168,14 +184,14 @@ class TaskFormContent extends StatelessWidget {
               id: subtask.id.value,
               taskId: edit!.task.id,
               title: subtask.title.value,
-              isCompleted: subtask.isCompleted.value ?? false,
+              isCompleted: subtask.isCompleted.value,
               description: subtask.description.value,
             );
           } else {
             return SubTask(
               taskId: edit!.task.id,
               title: subtask.title.value,
-              isCompleted: subtask.isCompleted.value ?? false,
+              isCompleted: subtask.isCompleted.value,
               description: subtask.description.value,
             );
           }
@@ -245,7 +261,7 @@ class TaskFormContent extends StatelessWidget {
                   FormContentBuilder(
                     title: 'Basic Information',
                     icon: Icons.info_outline,
-                    content: _buildBasicInfoPage(),
+                    content: _buildBasicInfoPage(context),
                   ),
                   FormContentBuilder(
                     title: 'Schedule & Settings',
@@ -300,15 +316,28 @@ class TaskFormContent extends StatelessWidget {
     );
   }
 
-  Widget _buildBasicInfoPage() {
+  Widget _buildBasicInfoPage(BuildContext context) {
     return Column(
       spacing: 24,
       children: [
         // Title Input Section
-        TitleTextField(title: title),
+        TitleTextField(
+          title: title,
+          focusNode: titleFocusNode,
+          onFieldSubmitted: (_) {
+            formKey.currentState!.validate();
+            FocusScope.of(context).requestFocus(descriptionFocusNode);
+          },
+        ),
 
         // Description Input Section
-        DescriptionTextField(description: description),
+        DescriptionTextField(
+          description: description,
+          focusNode: descriptionFocusNode,
+          onFieldSubmitted: (_) {
+            descriptionFocusNode.unfocus();
+          },
+        ),
 
         // Tips Card
         const InfoTipCard(),
@@ -365,6 +394,8 @@ class ReminderFormContent extends StatelessWidget {
     final Rx<DateTime> scheduledAt = DateTime.now().obs;
 
     final GlobalKey<FormState> formKey = GlobalKey<FormState>();
+    final FocusNode titleFocusNode = FocusNode();
+    final FocusNode descriptionFocusNode = FocusNode();
 
     void submitForm() {
       if (!formKey.currentState!.validate()) {
@@ -418,10 +449,23 @@ class ReminderFormContent extends StatelessWidget {
               const InfoTipCard(),
 
               // Title Input Section
-              TitleTextField(title: title),
+              TitleTextField(
+                title: title,
+                focusNode: titleFocusNode,
+                onFieldSubmitted: (_) {
+                  formKey.currentState!.validate();
+                  FocusScope.of(context).requestFocus(descriptionFocusNode);
+                },
+              ),
 
               // Description Input Section
-              DescriptionTextField(description: description),
+              DescriptionTextField(
+                description: description,
+                focusNode: descriptionFocusNode,
+                onFieldSubmitted: (_) {
+                  descriptionFocusNode.unfocus();
+                },
+              ),
 
               // Schedule Section
               ScheduledDate(scheduledAt: scheduledAt, isRoutine: false),

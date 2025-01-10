@@ -4,9 +4,13 @@ class TitleTextField extends StatelessWidget {
   const TitleTextField({
     super.key,
     required this.title,
+    required this.focusNode,
+    required this.onFieldSubmitted,
   });
 
   final RxString title;
+  final FocusNode focusNode;
+  final ValueChanged<String> onFieldSubmitted;
 
   @override
   Widget build(BuildContext context) {
@@ -30,6 +34,8 @@ class TitleTextField extends StatelessWidget {
       child: TextFormField(
         controller: titleController.value,
         style: theme.textTheme.bodyLarge,
+        focusNode: focusNode,
+        onFieldSubmitted: onFieldSubmitted,
         decoration: InputDecoration(
           hintText: 'What would you like to do?',
           hintStyle: theme.textTheme.bodyLarge?.copyWith(
@@ -64,6 +70,8 @@ class TitleTextField extends StatelessWidget {
         validator: (value) {
           if (value == null || value.isEmpty) {
             return 'Please enter a task title';
+          } else if (value.length > 255) {
+            return 'Task title is way to long';
           }
           return null;
         },

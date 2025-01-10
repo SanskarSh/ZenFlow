@@ -1,8 +1,4 @@
-import 'package:todo/src/core/utils/date_utils.dart';
-import 'package:todo/src/data/local_db/dao/task_dao.dart';
-import 'package:todo/src/data/local_db/database/app_db.dart';
-import 'package:todo/src/domain/entities/subtask.dart';
-import 'package:todo/src/domain/entities/task.dart';
+import 'package:todo/src/core/common/data_imports.dart';
 import 'package:drift/drift.dart' as drift_data_class;
 
 extension TaskMapper on TaskWithSubTasks {

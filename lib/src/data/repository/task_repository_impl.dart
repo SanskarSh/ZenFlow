@@ -1,9 +1,6 @@
-import 'package:todo/src/data/local_db/dao/task_dao.dart';
-import 'package:todo/src/data/local_db/database/app_db.dart';
+import 'package:todo/src/core/common/data_imports.dart';
 import 'package:todo/src/data/mappers/task_mapper.dart';
 import 'package:todo/src/domain/repositories/base_repository.dart';
-
-import '../../domain/entities/task.dart';
 
 class TaskRepositoryImpl implements TaskRepository {
   final TaskDao _taskDao;

@@ -1,6 +1,4 @@
-import 'package:todo/src/domain/entities/subtask.dart';
-
-import '../../core/constant/enumerates.dart';
+import 'package:todo/src/core/common/domain_imports.dart';
 
 class TaskEntity {
   final String id;

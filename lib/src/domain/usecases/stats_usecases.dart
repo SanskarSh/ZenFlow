@@ -1,5 +1,4 @@
-import 'package:todo/src/data/local_db/database/app_db.dart';
-import 'package:todo/src/domain/repositories/base_repository.dart';
+import 'package:todo/src/core/common/domain_imports.dart';
 
 class StatsUseCases {
   final TaskRepository _repository;

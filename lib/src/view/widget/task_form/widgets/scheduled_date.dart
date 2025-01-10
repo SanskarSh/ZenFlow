@@ -161,6 +161,17 @@ class ScheduledDate extends StatelessWidget {
           pickedTime.hour,
           pickedTime.minute,
         );
+        if (scheduledAt.value == DateTime.now() ||
+            scheduledAt.value.isBefore(DateTime.now())) {
+          Get.snackbar(
+            'Error',
+            'Please select a future date for reminder',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.red,
+            colorText: Colors.white,
+          );
+          return;
+        }
       }
     }
   }

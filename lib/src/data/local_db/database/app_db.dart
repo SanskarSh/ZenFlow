@@ -1,7 +1,6 @@
-import 'package:drift/drift.dart';
 import 'package:todo/src/core/config/app_config.dart';
 import 'package:todo/src/data/local_db/table.dart';
-import 'package:todo/src/core/constant/enumerates.dart';
+import 'package:todo/src/core/common/data_imports.dart';
 
 part 'app_db.g.dart';
 

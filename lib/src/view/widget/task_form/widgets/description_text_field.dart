@@ -1,9 +1,16 @@
 import 'package:todo/src/core/common/ui_imports.dart';
 
 class DescriptionTextField extends StatelessWidget {
-  const DescriptionTextField({super.key, required this.description});
+  const DescriptionTextField({
+    super.key,
+    required this.description,
+    required this.focusNode,
+    required this.onFieldSubmitted,
+  });
 
   final RxString description;
+  final FocusNode focusNode;
+  final ValueChanged<String> onFieldSubmitted;
 
   @override
   Widget build(BuildContext context) {
@@ -53,6 +60,8 @@ class DescriptionTextField extends StatelessWidget {
             style: const TextStyle(
               fontSize: 16,
             ),
+            focusNode: focusNode,
+            onFieldSubmitted: onFieldSubmitted,
             maxLines: 5,
             maxLength: 500,
             decoration: InputDecoration(

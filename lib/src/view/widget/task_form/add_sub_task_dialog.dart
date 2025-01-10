@@ -5,6 +5,8 @@ import 'package:drift/drift.dart' as drift_data_class;
 class AddSubTaskDialog extends StatelessWidget {
   final String? taskId;
   final _formKey = GlobalKey<FormState>();
+  final FocusNode titleFocus = FocusNode();
+  final FocusNode descriptionFocus = FocusNode();
   final RxString title = ''.obs;
   final RxString description = ''.obs;
 
@@ -13,6 +15,20 @@ class AddSubTaskDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
+    void submitForm() {
+      if (_formKey.currentState!.validate()) {
+        Get.back(
+          result: SubTasksCompanion(
+            taskId: drift_data_class.Value(taskId ?? ''),
+            title: drift_data_class.Value(title.value),
+            description: drift_data_class.Value(description.value),
+            isCompleted: const drift_data_class.Value(false),
+          ),
+        );
+      }
+    }
+
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Dialog(
@@ -64,6 +80,7 @@ class AddSubTaskDialog extends StatelessWidget {
                       children: [
                         TextFormField(
                           autofocus: true,
+                          focusNode: titleFocus,
                           decoration: InputDecoration(
                             labelText: 'Title',
                             hintText: 'Enter sub-task title',
@@ -76,18 +93,8 @@ class AddSubTaskDialog extends StatelessWidget {
                           ),
                           onFieldSubmitted: (value) {
                             if (_formKey.currentState!.validate()) {
-                              Get.back(
-                                result: SubTasksCompanion(
-                                  taskId: drift_data_class.Value(
-                                    taskId ?? '',
-                                  ),
-                                  title: drift_data_class.Value(title.value),
-                                  isCompleted:
-                                      const drift_data_class.Value(false),
-                                  description:
-                                      const drift_data_class.Value(null),
-                                ),
-                              );
+                              titleFocus.unfocus();
+                              descriptionFocus.requestFocus();
                             }
                           },
                           validator: (value) => value?.isEmpty ?? true
@@ -97,6 +104,7 @@ class AddSubTaskDialog extends StatelessWidget {
                         ),
                         TextFormField(
                           autofocus: true,
+                          focusNode: descriptionFocus,
                           decoration: InputDecoration(
                             labelText: 'Description',
                             hintText: 'Enter details sub-task',
@@ -108,22 +116,9 @@ class AddSubTaskDialog extends StatelessWidget {
                             fillColor: Theme.of(context).colorScheme.surface,
                           ),
                           onFieldSubmitted: (value) {
-                            if (_formKey.currentState!.validate()) {
-                              Get.back(
-                                result: SubTasksCompanion(
-                                  taskId: drift_data_class.Value(taskId ?? ''),
-                                  title: drift_data_class.Value(title.value),
-                                  description:
-                                      drift_data_class.Value(description.value),
-                                  isCompleted:
-                                      const drift_data_class.Value(false),
-                                ),
-                              );
-                            }
+                            descriptionFocus.unfocus();
+                            submitForm();
                           },
-                          // validator: (value) => value?.isEmpty ?? true
-                          //     ? 'Please enter a description'
-                          //     : null,
                           onChanged: (value) => description.value = value,
                         ),
                       ],

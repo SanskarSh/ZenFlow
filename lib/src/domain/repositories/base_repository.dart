@@ -1,5 +1,4 @@
-import 'package:todo/src/data/local_db/dao/task_dao.dart';
-import 'package:todo/src/data/local_db/database/app_db.dart';
+import 'package:todo/src/core/common/domain_imports.dart';
 
 abstract class TaskRepository {
   Stream<List<TaskWithSubTasks>> get tasks;
