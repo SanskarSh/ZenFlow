@@ -1,4 +1,4 @@
-package com.example.todo
+package com.example.zenflow
 
 import io.flutter.embedding.android.FlutterActivity
 
